@@ -20,18 +20,23 @@
     /* Responsive */
     @media only screen and (max-width: 620px) {
       .container { width: 100% !important; max-width: 100% !important; }
-      .px { padding-left: 24px !important; padding-right: 24px !important; }
+      .px { padding-left: 20px !important; padding-right: 20px !important; }
+      /* Tighten the 3-column wrapper cell so stacked steps aren't cramped */
+      .cols-wrap { padding-left: 12px !important; padding-right: 12px !important; }
       .col {
         display: block !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box;
-        padding-left: 24px !important;
-        padding-right: 24px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        text-align: center !important;
       }
-      .col-spacer { height: 28px !important; line-height: 28px !important; font-size: 28px !important; }
-      .banner-text { font-size: 22px !important; }
-      .hello { font-size: 30px !important; }
+      .col-spacer { display: block !important; height: 28px !important; line-height: 28px !important; font-size: 28px !important; }
+      .banner-text { font-size: 20px !important; line-height: 1.25 !important; letter-spacing: 0.5px !important; padding-left: 0 !important; padding-right: 0 !important; }
+      .banner-cell { padding-left: 16px !important; padding-right: 16px !important; }
+      .hello { font-size: 26px !important; letter-spacing: 1px !important; word-break: break-word !important; }
+      .hello-cell { padding-left: 16px !important; padding-right: 16px !important; }
     }
   </style>
 </head>
@@ -53,14 +58,14 @@
 
           <!-- HELLO MARTIN headline -->
           <tr>
-            <td align="center" style="background-color:#ffffff; padding:40px 24px 32px 24px;">
+            <td class="hello-cell" align="center" style="background-color:#ffffff; padding:40px 24px 32px 24px;">
               <h1 class="hello" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:36px; line-height:1.1; font-weight:bold; letter-spacing:3px; color:#d97706; text-transform:uppercase;">Hi [First Name]</h1>
             </td>
           </tr>
 
           <!-- Coral banner -->
           <tr>
-            <td align="center" bgcolor="#b45309" style="background-color:#b45309; padding:28px 24px;">
+            <td class="banner-cell" align="center" bgcolor="#b45309" style="background-color:#b45309; padding:28px 24px;">
               <p class="banner-text" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:26px; line-height:1.2; font-weight:bold; letter-spacing:1px; color:#ffffff; text-transform:uppercase;">Your Request Has Been Submitted!</p>
             </td>
           </tr>
@@ -83,7 +88,7 @@
 
           <!-- Three columns -->
           <tr>
-            <td style="background-color:#ffffff; padding:24px 28px 8px 28px;">
+            <td class="cols-wrap" align="center" style="background-color:#ffffff; padding:24px 28px 8px 28px;">
               <!--[if mso]>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
               <td width="33%" valign="top">

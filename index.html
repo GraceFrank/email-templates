@@ -64,10 +64,10 @@
       .vbar{padding:12px 14px;}
       .vtitle{font-size:14px;}
       .btn{width:38px;height:38px;font-size:17px;}
-      .vstage{gap:0;padding:0 10px 12px;align-items:stretch;}
+      .vstage{gap:0;padding:0;align-items:stretch;}   /* edge-to-edge */
       .vstage .nav{display:none;}            /* hide side arrows; use top bar + dots + swipe */
-      .phone{flex:1 1 auto;width:100%;border-radius:14px;}
-      .dots{padding:0 0 16px;}
+      .phone{flex:1 1 auto;width:100%;border-radius:0;border:0;box-shadow:none;}
+      .dots{padding:10px 0 14px;}
     }
   </style>
 </head>
@@ -106,7 +106,7 @@
       {name:"Request Submitted",  tag:"Onboarding", file:"emails/request-submitted.html"},
       {name:"Wellness Ring",      tag:"Product Launch", file:"emails/flow-ring.html"},
       {name:"Body Care Edit",     tag:"Product Grid", file:"emails/athena-club.html"},
-      {name:"Family Newsletter",  tag:"Newsletter", file:"emails/good-inside.html"},
+      {name:"Weekly Digest",      tag:"Newsletter", file:"emails/good-inside.html"},
       {name:"Order Summary",      tag:"E-commerce", file:"emails/order-confirmation.html"},
     ];
 

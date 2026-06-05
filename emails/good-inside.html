@@ -13,10 +13,14 @@
     img{border:0;line-height:100%;outline:none;text-decoration:none;display:block;-ms-interpolation-mode:bicubic;}
     a{text-decoration:none;}
     body{background-color:#f1ece0;}
-    @media only screen and (max-width:620px){
+    @media only screen and (max-width:600px){
       .container{width:100%!important;}
-      .px{padding-left:24px!important;padding-right:24px!important;}
-      .h1{font-size:28px!important;}
+      .px{padding-left:22px!important;padding-right:22px!important;}
+      .h1{font-size:26px!important;line-height:30px!important;}
+      .m-pad-band{padding-left:22px!important;padding-right:22px!important;}
+      .m-pad-footer{padding-left:18px!important;padding-right:18px!important;}
+      .m-pad-legal{padding-left:22px!important;padding-right:22px!important;}
+      .m-nav a{display:inline-block!important;white-space:nowrap!important;}
     }
   </style>
 </head>
@@ -32,10 +36,10 @@
 
           <!-- HEADER BAND -->
           <tr>
-            <td align="center" style="background:#e8dfc0;padding:32px 40px 20px;">
+            <td align="center" class="m-pad-band" style="background:#e8dfc0;padding:32px 40px 20px;">
               <div style="font-size:28px;font-weight:900;letter-spacing:3px;color:#1a1a1a;text-align:center;text-transform:uppercase;">SIGNAL</div>
               <div style="margin-top:4px;font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;">Weekly Digest</div>
-              <div style="margin-top:16px;font-size:12px;font-weight:700;color:#4a4a4a;">
+              <div class="m-nav" style="margin-top:16px;font-size:12px;font-weight:700;color:#4a4a4a;line-height:24px;">
                 <a href="#" style="color:#4a4a4a;text-decoration:none;">Home</a>
                 &nbsp;&nbsp;&nbsp;<a href="#" style="color:#4a4a4a;text-decoration:none;">Articles</a>
                 &nbsp;&nbsp;&nbsp;<a href="#" style="color:#4a4a4a;text-decoration:none;">Events</a>
@@ -143,7 +147,7 @@
 
           <!-- LEGAL NOTE -->
           <tr>
-            <td align="center" style="padding:24px 48px 20px;">
+            <td align="center" class="m-pad-legal" style="padding:24px 48px 20px;">
               <p style="margin:0;font-size:11px;line-height:17px;font-style:italic;color:#8a8576;text-align:center;">
                 The content in this newsletter is for informational purposes only and does not constitute professional advice. Always do your own research before acting on any recommendation.
               </p>
@@ -152,7 +156,7 @@
 
           <!-- FOOTER -->
           <tr>
-            <td align="center" style="padding:0 40px 36px;">
+            <td align="center" class="m-pad-footer" style="padding:0 40px 36px;">
               <div style="font-size:28px;font-weight:900;color:#1a1a1a;letter-spacing:3px;">S</div>
               <div style="margin-top:14px;font-size:12px;font-weight:700;color:#4a4a4a;">
                 <a href="#" style="color:#4a4a4a;text-decoration:none;">Archive</a>

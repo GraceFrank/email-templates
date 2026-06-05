@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Order Confirmation</title>
+<style>
+  @media only screen and (max-width:600px) {
+    .pad-side { padding-left:22px !important; padding-right:22px !important; }
+    .header-pad { padding-left:22px !important; padding-right:22px !important; }
+    .hero-pad { padding:36px 22px 24px 22px !important; }
+    .hero-headline { font-size:30px !important; }
+    .summary-pad { padding-left:22px !important; padding-right:22px !important; }
+    .box-pad { padding-left:18px !important; padding-right:18px !important; }
+    .ship-col { display:block !important; width:100% !important; padding-left:0 !important; padding-right:0 !important; }
+    .ship-col-first { padding-bottom:20px !important; }
+  }
+</style>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f0;font-family:'Georgia',serif;">
 
@@ -17,7 +29,7 @@
 
         <!-- Header -->
         <tr>
-          <td style="background-color:#0d0d0d;padding:28px 40px;border-bottom:3px solid #c9a84c;">
+          <td class="header-pad" style="background-color:#0d0d0d;padding:28px 40px;border-bottom:3px solid #c9a84c;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td>
@@ -34,9 +46,9 @@
 
         <!-- Hero Section -->
         <tr>
-          <td style="padding:50px 40px 30px 40px;">
+          <td class="hero-pad" style="padding:50px 40px 30px 40px;">
             <p style="font-family:Arial,sans-serif;font-size:12px;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px 0;">Thank you for your purchase</p>
-            <h1 style="font-family:'Georgia',serif;font-size:42px;font-weight:normal;color:#0d0d0d;margin:0 0 20px 0;line-height:1.1;">Your order<br>is confirmed. ✓</h1>
+            <h1 class="hero-headline" style="font-family:'Georgia',serif;font-size:42px;font-weight:normal;color:#0d0d0d;margin:0 0 20px 0;line-height:1.1;">Your order<br>is confirmed. ✓</h1>
             <p style="font-family:Arial,sans-serif;font-size:15px;color:#555555;line-height:1.7;margin:0 0 8px 0;">Hi <strong>[Customer Name]</strong>,</p>
             <p style="font-family:Arial,sans-serif;font-size:15px;color:#555555;line-height:1.7;margin:0;">We've received your order <strong style="color:#0d0d0d;">№ 10847</strong> and it's being carefully prepared. We'll notify you as soon as it ships.</p>
           </td>
@@ -44,16 +56,16 @@
 
         <!-- Order Summary Box -->
         <tr>
-          <td style="padding:0 40px 30px 40px;">
+          <td class="summary-pad" style="padding:0 40px 30px 40px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9f8f6;border-radius:4px;border:1px solid #e8e5df;">
               <tr>
-                <td style="padding:24px 28px 16px 28px;">
+                <td class="box-pad" style="padding:24px 28px 16px 28px;">
                   <p style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#888888;margin:0 0 20px 0;">Order Summary</p>
                 </td>
               </tr>
               <!-- Product Row -->
               <tr>
-                <td style="padding:0 28px 20px 28px;">
+                <td class="box-pad" style="padding:0 28px 20px 28px;">
                   <table width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td width="80" valign="top">
@@ -71,10 +83,10 @@
                 </td>
               </tr>
               <!-- Divider -->
-              <tr><td style="padding:0 28px;"><hr style="border:none;border-top:1px solid #e0ddd7;margin:0;" /></td></tr>
+              <tr><td class="box-pad" style="padding:0 28px;"><hr style="border:none;border-top:1px solid #e0ddd7;margin:0;" /></td></tr>
               <!-- Totals -->
               <tr>
-                <td style="padding:16px 28px;">
+                <td class="box-pad" style="padding:16px 28px;">
                   <table width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:Arial,sans-serif;font-size:14px;color:#777777;padding-bottom:10px;">Subtotal</td>
@@ -101,21 +113,21 @@
 
         <!-- CTA -->
         <tr>
-          <td style="padding:0 40px 40px 40px;" align="center">
+          <td class="pad-side" style="padding:0 40px 40px 40px;" align="center">
             <a href="#" style="display:inline-block;background-color:#0d0d0d;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:16px 40px;border-radius:2px;">Track Your Order</a>
           </td>
         </tr>
 
         <!-- Shipping Info -->
         <tr>
-          <td style="padding:0 40px 40px 40px;">
+          <td class="pad-side" style="padding:0 40px 40px 40px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td width="50%" style="padding-right:16px;vertical-align:top;">
+                <td width="50%" class="ship-col ship-col-first" style="padding-right:16px;vertical-align:top;">
                   <p style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin:0 0 8px 0;">Shipping to</p>
                   <p style="font-family:Arial,sans-serif;font-size:14px;color:#555555;line-height:1.6;margin:0;">[Customer Name]<br>123 Main Street<br>New York, NY 10001</p>
                 </td>
-                <td width="50%" style="padding-left:16px;vertical-align:top;">
+                <td width="50%" class="ship-col" style="padding-left:16px;vertical-align:top;">
                   <p style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#c9a84c;margin:0 0 8px 0;">Estimated Delivery</p>
                   <p style="font-family:Arial,sans-serif;font-size:14px;color:#555555;line-height:1.6;margin:0;">June 10 – June 13, 2026<br><span style="color:#888888;">Standard Shipping</span></p>
                 </td>
@@ -126,7 +138,7 @@
 
         <!-- Footer -->
         <tr>
-          <td style="background-color:#0d0d0d;padding:28px 40px;">
+          <td class="header-pad" style="background-color:#0d0d0d;padding:28px 40px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td>
