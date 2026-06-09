@@ -40,6 +40,17 @@
     .card .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:4px 9px;border-radius:999px;white-space:nowrap;}
     .footnote{text-align:center;color:var(--muted);font-size:13px;margin-top:46px;}
 
+    /* ---- Category tabs ---- */
+    .tabs{display:flex;justify-content:center;gap:10px;margin:0 0 36px;flex-wrap:wrap;}
+    .tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+      font-size:14px;font-weight:600;padding:10px 22px;border-radius:999px;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:8px;}
+    .tab:hover{border-color:#3a4a63;color:var(--ink);}
+    .tab.active{background:linear-gradient(135deg,#910038,#60003c);border-color:#910038;color:#fff;}
+    .tab .count{font-size:11px;opacity:.7;border:1px solid currentColor;border-radius:999px;padding:1px 7px;}
+    .tab.soon{opacity:.6;}
+    .empty{text-align:center;color:var(--muted);padding:70px 20px;border:1px dashed var(--line);border-radius:16px;background:var(--panel);}
+    .empty .big{font-size:18px;color:var(--ink);font-weight:600;margin-bottom:8px;}
+
     /* ---- Slide deck overlay ---- */
     .viewer{position:fixed;inset:0;height:100vh;height:100dvh;background:rgba(7,9,12,.92);backdrop-filter:blur(8px);
       display:none;z-index:50;flex-direction:column;}
@@ -74,10 +85,12 @@
 <body>
   <div class="wrap">
     <header class="hero">
-      <h1>HOFWAMS · Welcome Email</h1>
-      <p class="sub">Six concepts, one brand system — pulled live from hofwams.com.</p>
+      <h1>HOFWAMS · Email Templates</h1>
+      <p class="sub">12 concepts on one brand system, pulled live from hofwams.com. Pick a category.</p>
     </header>
+    <div class="tabs" id="tabs"></div>
     <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;"></div>
     <p class="footnote">Tip: use ← → arrow keys to move between templates · press Esc to close.</p>
   </div>
 
@@ -100,25 +113,78 @@
   </div>
 
   <script>
-    const TEMPLATES = [
-      {name:"A · The Drop",       tag:"Photo Hero", file:"emails/hofwams-welcome-concert.html"},
-      {name:"B · Warm Welcome",   tag:"Light / Benefits", file:"emails/hofwams-welcome-warm.html"},
-      {name:"C · The VIP Pass",   tag:"Dark / Ticket", file:"emails/hofwams-welcome-vip.html"},
-      {name:"D · Editorial",      tag:"Minimal", file:"emails/hofwams-welcome-minimal.html"},
-      {name:"E · The Poster",     tag:"Bold / Flyer", file:"emails/hofwams-welcome-poster.html"},
-      {name:"F · Pick Your Scene",tag:"Discover / Grid", file:"emails/hofwams-welcome-discover.html"},
+    const CATS = [
+      {key:"welcome",    label:"Welcome"},
+      {key:"contact",    label:"Contact / Thank You"},
+      {key:"newsletter", label:"Newsletter"},
     ];
 
-    const grid = document.getElementById('grid');
-    TEMPLATES.forEach((t,i)=>{
-      const c = document.createElement('div');
-      c.className = 'card';
-      c.innerHTML = `
-        <div class="thumb"><iframe src="${t.file}" loading="lazy" scrolling="no" tabindex="-1"></iframe><div class="overlay"></div></div>
-        <div class="meta"><span class="name">${t.name}</span><span class="tag">${t.tag}</span></div>`;
-      c.addEventListener('click', ()=>open(i));
-      grid.appendChild(c);
+    const TEMPLATES = [
+      // ---- Welcome ----
+      {cat:"welcome", name:"A · The Drop",     tag:"Photo Hero", file:"emails/hofwams-welcome-concert.html"},
+      {cat:"welcome", name:"B · Warm Welcome", tag:"Light / Benefits", file:"emails/hofwams-welcome-warm.html"},
+      {cat:"welcome", name:"C · Editorial",    tag:"Minimal", file:"emails/hofwams-welcome-minimal.html"},
+      {cat:"welcome", name:"D · The Poster",   tag:"Bold / Flyer", file:"emails/hofwams-welcome-poster.html"},
+      {cat:"welcome", name:"E · Walkthrough",  tag:"Feature Tour", file:"emails/hofwams-welcome-walkthrough.html"},
+      {cat:"welcome", name:"F · Explore",      tag:"Hero / Scenes", file:"emails/hofwams-welcome-explore.html"},
+      // ---- Contact / Thank You ----
+      {cat:"contact", name:"A · Request Pass", tag:"Dark / Reference Card", file:"emails/hofwams-contact-pass.html"},
+      {cat:"contact", name:"B · Next Steps",   tag:"Light / Numbered", file:"emails/hofwams-contact-steps.html"},
+      {cat:"contact", name:"C · Quick Confirm",tag:"Minimal / Summary", file:"emails/hofwams-contact-minimal.html"},
+      // ---- Newsletter ----
+      {cat:"newsletter", name:"A · What's On",  tag:"Event Grid", file:"emails/hofwams-newsletter-scenes.html"},
+      {cat:"newsletter", name:"B · The Weekly", tag:"Editorial Digest", file:"emails/hofwams-newsletter-weekly.html"},
+      {cat:"newsletter", name:"C · The Lineup", tag:"Dark / Visual", file:"emails/hofwams-newsletter-lineup.html"},
+    ];
+
+    const grid  = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const tabsEl= document.getElementById('tabs');
+    let activeCat = CATS[0].key;
+    let view = [];   // templates in the active category (what the viewer pages through)
+
+    // ---- Tabs ----
+    CATS.forEach(cat=>{
+      const n = TEMPLATES.filter(t=>t.cat===cat.key).length;
+      const b = document.createElement('button');
+      b.className = 'tab' + (n===0?' soon':'') + (cat.key===activeCat?' active':'');
+      b.innerHTML = `${cat.label} <span class="count">${n||'soon'}</span>`;
+      b.addEventListener('click', ()=>selectCat(cat.key));
+      b.dataset.key = cat.key;
+      tabsEl.appendChild(b);
     });
+
+    function selectCat(key){
+      activeCat = key;
+      [...tabsEl.children].forEach(b=>b.classList.toggle('active', b.dataset.key===key));
+      renderGrid();
+    }
+
+    function renderGrid(){
+      view = TEMPLATES.filter(t=>t.cat===activeCat);
+      grid.innerHTML = '';
+      dots.innerHTML = '';
+      if(view.length===0){
+        grid.style.display='none';
+        empty.style.display='block';
+        const label = CATS.find(c=>c.key===activeCat).label;
+        empty.innerHTML = `<div class="big">${label} templates — coming soon</div>We'll design these next, on the same HOFWAMS brand system.`;
+        return;
+      }
+      empty.style.display='none';
+      grid.style.display='grid';
+      view.forEach((t,i)=>{
+        const c = document.createElement('div');
+        c.className = 'card';
+        c.innerHTML = `
+          <div class="thumb"><iframe src="${t.file}" loading="lazy" scrolling="no" tabindex="-1"></iframe><div class="overlay"></div></div>
+          <div class="meta"><span class="name">${t.name}</span><span class="tag">${t.tag}</span></div>`;
+        c.addEventListener('click', ()=>open(i));
+        grid.appendChild(c);
+        const d = document.createElement('div');
+        d.className='dot'; d.addEventListener('click',()=>go(i)); dots.appendChild(d);
+      });
+    }
 
     // ---- Viewer logic ----
     const viewer = document.getElementById('viewer');
@@ -128,21 +194,16 @@
     const dots = document.getElementById('dots');
     let cur = 0;
 
-    TEMPLATES.forEach((t,i)=>{
-      const d = document.createElement('div');
-      d.className='dot'; d.addEventListener('click',()=>go(i)); dots.appendChild(d);
-    });
-
     function render(){
-      const t = TEMPLATES[cur];
+      const t = view[cur];
       vframe.src = t.file;
       vtitle.textContent = t.name;
-      vcount.textContent = `${cur+1} / ${TEMPLATES.length}`;
+      vcount.textContent = `${cur+1} / ${view.length}`;
       [...dots.children].forEach((d,i)=>d.classList.toggle('active',i===cur));
     }
     function open(i){ cur=i; viewer.classList.add('open'); document.body.style.overflow='hidden'; render(); }
     function close(){ viewer.classList.remove('open'); document.body.style.overflow=''; vframe.src='about:blank'; }
-    function go(i){ cur=(i+TEMPLATES.length)%TEMPLATES.length; render(); }
+    function go(i){ cur=(i+view.length)%view.length; render(); }
 
     document.getElementById('closeBtn').onclick = close;
     document.getElementById('prevBtn').onclick = ()=>go(cur-1);
@@ -165,6 +226,9 @@
       const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
       if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)) go(dx<0 ? cur+1 : cur-1);
     }, {passive:true});
+
+    // init
+    renderGrid();
   </script>
 </body>
 </html>
