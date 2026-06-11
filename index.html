@@ -275,7 +275,12 @@
         const st = doc.createElement('style'); st.id = 'hf-edit-style';
         st.textContent = '[data-hfedit]{outline:1px dashed rgba(145,0,56,.5);outline-offset:2px;cursor:text;border-radius:2px;}'
           + '[data-hfedit]:hover{outline:1.5px dashed #910038;background:rgba(145,0,56,.05);}'
-          + '[data-hfedit]:focus{outline:2px solid #910038;background:rgba(145,0,56,.07);}';
+          + '[data-hfedit]:focus{outline:2px solid #910038;background:rgba(145,0,56,.07);}'
+          + '[data-hfimg]{cursor:pointer;transition:.12s;}'
+          + '[data-hfimg]:hover{outline:3px solid #910038;outline-offset:-3px;filter:brightness(.9);}'
+          + '[data-hfbg]{position:relative!important;}'
+          + '.hf-photobtn{position:absolute;top:10px;left:10px;z-index:9;background:rgba(145,0,56,.94);color:#fff;font:600 12px/1 Arial,sans-serif;padding:8px 12px;border-radius:8px;cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 14px rgba(0,0,0,.3);}'
+          + '.hf-photobtn:hover{background:#910038;}';
         doc.head.appendChild(st);
       }
       doc.body.querySelectorAll(TEXT_SEL).forEach(el => {
@@ -305,14 +310,66 @@
         el.appendChild(btn);
       });
     }
-    }
     function disableEditable(){
       const doc = vframe.contentDocument; if (!doc || !doc.body) return;
       doc.body.querySelectorAll('[data-hfedit]').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('data-hfedit'); });
+      doc.querySelectorAll('[data-hfimg]').forEach(el => { el.removeAttribute('data-hfimg'); el.removeAttribute('title'); });
+      doc.querySelectorAll('.hf-photobtn').forEach(b => b.remove());
+      doc.querySelectorAll('[data-hfbg]').forEach(el => el.removeAttribute('data-hfbg'));
       doc.body.removeEventListener('input', onEdit, true);
       doc.body.removeEventListener('keydown', enterAsBreak, true);
+      doc.body.removeEventListener('click', onImgClick, true);
     }
     function enterAsBreak(e){ if (e.key === 'Enter'){ e.preventDefault(); vframe.contentDocument.execCommand('insertLineBreak'); } }
+
+    // ---- image swapping ----
+    function onImgClick(e){
+      const ctl = e.target.closest && e.target.closest('[data-hfctl]');
+      if (ctl){ e.preventDefault(); e.stopPropagation(); replaceImage(ctl.parentElement, 'bg'); return; }
+      const img = e.target.closest && e.target.closest('[data-hfimg]');
+      if (img){ e.preventDefault(); e.stopPropagation(); replaceImage(img, 'img'); }
+    }
+    function replaceImage(el, kind){
+      let cur = '';
+      if (kind === 'img') cur = el.getAttribute('src') || '';
+      else { const m = /url\(["']?(.*?)["']?\)/.exec(el.style.backgroundImage || ''); cur = m ? m[1] : ''; }
+      const url = prompt('Paste the image URL for this photo:', cur || 'https://');
+      if (url !== null && url.trim()) setImage(el, kind, url.trim());
+    }
+    function setImage(el, kind, val){
+      if (kind === 'img'){ el.setAttribute('src', val); el.removeAttribute('srcset'); }
+      else { el.style.backgroundImage = 'url("' + val + '")'; el.removeAttribute('background'); }
+      saveEdits();
+      setHint('<b>Photo updated ✓</b>');
+    }
+
+    async function downloadPNG(){
+      if (!canEdit){ setHint('PNG export needs a local server — see the note above.', true); return; }
+      if (typeof html2canvas === 'undefined'){ setHint('PNG renderer still loading — try again in a moment.', true); return; }
+      const doc = vframe.contentDocument; if (!doc || !doc.body) return;
+      saveCurrent();
+      const wasEditing = editMode; if (wasEditing) disableEditable();
+      const prevW = vframe.style.width;
+      vframe.style.setProperty('width', '620px', 'important');   // tight, desktop-layout capture
+      setHint('Rendering PNG…');
+      await new Promise(r => setTimeout(r, 220));
+      try {
+        const body = doc.body;
+        const canvas = await html2canvas(body, { useCORS: true, allowTaint: false, scale: 2,
+          backgroundColor: getComputedStyle(body).backgroundColor || '#ffffff',
+          width: body.scrollWidth, height: body.scrollHeight, windowWidth: body.scrollWidth, windowHeight: body.scrollHeight });
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = curFile.split('/').pop().replace(/\.html?$/, '') + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setHint('<b>PNG downloaded ✓</b>');
+      } catch (err) {
+        setHint('Couldn\'t render PNG — an external image may have blocked it. HTML export still works.', true);
+      } finally {
+        vframe.style.width = prevW;
+        if (wasEditing) applyEditable();
+      }
+    }
 
     let saveTimer;
     function onEdit(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveEdits, 350); }
@@ -320,6 +377,9 @@
       const doc = vframe.contentDocument;
       const clone = doc.documentElement.cloneNode(true);
       clone.querySelectorAll('[data-hfedit]').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('data-hfedit'); });
+      clone.querySelectorAll('[data-hfimg]').forEach(el => { el.removeAttribute('data-hfimg'); el.removeAttribute('title'); });
+      clone.querySelectorAll('[data-hfbg]').forEach(el => el.removeAttribute('data-hfbg'));
+      clone.querySelectorAll('[data-hfctl], .hf-photobtn').forEach(el => el.remove());
       const st = clone.querySelector('#hf-edit-style'); if (st) st.remove();
       const bs = clone.querySelector('#hf-base'); if (bs) bs.remove();
       return '<!DOCTYPE html>\n' + clone.outerHTML;
@@ -366,7 +426,8 @@
     function go(i){ saveCurrent(); cur = (i + view.length) % view.length; render(); }
 
     editBtn.onclick  = toggleEdit;
-    dlBtn.onclick    = downloadTemplate;
+    dlHtml.onclick   = downloadTemplate;
+    dlPng.onclick    = downloadPNG;
     resetBtn.onclick = resetTemplate;
 
     document.getElementById('closeBtn').onclick = close;
