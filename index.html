@@ -63,14 +63,26 @@
       width:42px;height:42px;border-radius:11px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;}
     .btn:hover{background:#212a36;border-color:#3a4a63;}
     .btn.close{font-size:22px;}
-    .vstage{flex:1;display:flex;align-items:center;justify-content:center;gap:26px;padding:0 24px 30px;min-height:0;}
-    .nav{flex:0 0 auto;}
-    .phone{flex:0 1 680px;height:100%;max-height:100%;background:#fff;border-radius:22px;overflow:hidden;
+    .vstage{flex:1;display:flex;align-items:stretch;justify-content:center;gap:0;padding:0 14px 14px;min-height:0;position:relative;}
+    .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;background:rgba(20,24,30,.72);}
+    .nav:hover{background:rgba(40,48,60,.92);}
+    #prevBig{left:18px;} #nextBig{right:18px;}
+    .phone{flex:0 1 1040px;width:100%;height:100%;max-height:100%;background:#fff;border-radius:14px;overflow:hidden;
       border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.8);}
     .phone iframe{width:100%;height:100%;border:0;display:block;}
     .dots{display:flex;justify-content:center;gap:7px;padding:0 0 22px;flex-wrap:wrap;}
     .dot{width:8px;height:8px;border-radius:50%;background:#2c3744;cursor:pointer;transition:.15s;}
     .dot.active{background:var(--accent);width:22px;border-radius:5px;}
+    /* ---- Editor toolbar ---- */
+    .vleft{display:flex;align-items:center;min-width:0;}
+    .btn.wide{width:auto;padding:0 14px;gap:7px;font-size:13px;font-weight:600;white-space:nowrap;}
+    .btn.on{background:linear-gradient(135deg,#910038,#60003c);border-color:#910038;color:#fff;}
+    .sep{width:1px;height:26px;background:var(--line);margin:0 4px;flex:0 0 auto;}
+    .vhint{text-align:center;font-size:12px;color:var(--muted);padding:0 22px 8px;min-height:17px;line-height:17px;}
+    .vhint b{color:#e6edf3;font-weight:600;}
+    .vhint.warn{color:#ffce7a;}
+    .vhint code{background:#1b2330;border:1px solid var(--line);border-radius:5px;padding:1px 7px;color:#cfe;font-size:11px;}
+    @media(max-width:680px){ .btn.wide span{display:none;} .btn.wide{padding:0;width:42px;} }
     @media(max-width:560px){
       .vbar{padding:12px 14px;}
       .vtitle{font-size:14px;}
@@ -83,6 +95,7 @@
   </style>
 </head>
 <body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <div class="wrap">
     <header class="hero">
       <h1>HOFWAMS · Email Templates</h1>
@@ -91,19 +104,25 @@
     <div class="tabs" id="tabs"></div>
     <div class="grid" id="grid"></div>
     <div class="empty" id="empty" style="display:none;"></div>
-    <p class="footnote">Tip: use ← → arrow keys to move between templates · press Esc to close.</p>
+    <p class="footnote">Open any template, hit <b style="color:#e6edf3">✎ Edit copy</b>, click any text to rewrite it, then <b style="color:#e6edf3">⤓ Download</b> the finished HTML. Edits auto-save in your browser · ← → to switch · Esc to close.</p>
   </div>
 
   <!-- Slide deck viewer -->
   <div class="viewer" id="viewer">
     <div class="vbar">
-      <div><span class="vtitle" id="vtitle"></span><span class="vcount" id="vcount"></span></div>
+      <div class="vleft"><span class="vtitle" id="vtitle"></span><span class="vcount" id="vcount"></span></div>
       <div class="vctrls">
+        <button class="btn wide" id="editBtn" title="Edit copy & images">✎ <span>Edit</span></button>
+        <button class="btn wide" id="dlHtml" title="Download as HTML">⤓ <span>HTML</span></button>
+        <button class="btn wide" id="dlPng" title="Download as PNG image">⤓ <span>PNG</span></button>
+        <button class="btn" id="resetBtn" title="Restore original">↺</button>
+        <span class="sep"></span>
         <button class="btn" id="prevBtn" title="Previous (←)">‹</button>
         <button class="btn" id="nextBtn" title="Next (→)">›</button>
         <button class="btn close" id="closeBtn" title="Close (Esc)">×</button>
       </div>
     </div>
+    <div class="vhint" id="vhint"></div>
     <div class="vstage">
       <button class="btn nav" id="prevBig" title="Previous">‹</button>
       <div class="phone"><iframe id="vframe" title="Email preview"></iframe></div>
@@ -194,16 +213,161 @@
     const dots = document.getElementById('dots');
     let cur = 0;
 
-    function render(){
-      const t = view[cur];
-      vframe.src = t.file;
-      vtitle.textContent = t.name;
-      vcount.textContent = `${cur+1} / ${view.length}`;
-      [...dots.children].forEach((d,i)=>d.classList.toggle('active',i===cur));
+    // ---- Inline copy editor ----
+    const vhint    = document.getElementById('vhint');
+    const editBtn  = document.getElementById('editBtn');
+    const dlHtml   = document.getElementById('dlHtml');
+    const dlPng    = document.getElementById('dlPng');
+    const resetBtn = document.getElementById('resetBtn');
+    const TEXT_SEL = 'p,h1,h2,h3,h4,h5,h6,span,a,li,td,div,strong,em,b,small';
+    let editMode = false;     // is edit mode toggled on
+    let canEdit  = false;     // could we fetch the source (needs http/hosted)
+    let curFile  = null;
+    const origCache = {};     // file -> pristine html
+    const sKey = f => 'hofedit:' + f;
+
+    function setHint(html, warn){ vhint.innerHTML = html || ''; vhint.classList.toggle('warn', !!warn); }
+
+    function injectBase(html, file){
+      const base = new URL(file.substring(0, file.lastIndexOf('/') + 1), location.href).href;
+      const tag = `<base id="hf-base" href="${base}">`;
+      return /<head[^>]*>/i.test(html) ? html.replace(/<head([^>]*)>/i, `<head$1>${tag}`) : tag + html;
     }
-    function open(i){ cur=i; viewer.classList.add('open'); document.body.style.overflow='hidden'; render(); }
-    function close(){ viewer.classList.remove('open'); document.body.style.overflow=''; vframe.src='about:blank'; }
-    function go(i){ cur=(i+view.length)%view.length; render(); }
+
+    async function render(){
+      const t = view[cur];
+      vtitle.textContent = t.name;
+      vcount.textContent = `${cur + 1} / ${view.length}`;
+      [...dots.children].forEach((d, i) => d.classList.toggle('active', i === cur));
+      await loadTemplate(t.file);
+    }
+
+    async function loadTemplate(file){
+      curFile = file;
+      let orig;
+      try {
+        orig = await (await fetch(file)).text();
+        canEdit = true;
+      } catch (e) {                       // file:// blocks fetch — preview only
+        canEdit = false;
+        vframe.removeAttribute('srcdoc');
+        vframe.src = file;
+        updateToolbar();
+        setHint('Preview only — to edit copy, serve this folder: <code>python3 -m http.server</code> then open <code>http://localhost:8000</code>', true);
+        return;
+      }
+      origCache[file] = orig;
+      const saved = localStorage.getItem(sKey(file));
+      vframe.srcdoc = injectBase(saved != null ? saved : orig, file);
+      updateToolbar();
+    }
+
+    // re-apply editability whenever the frame (re)loads
+    vframe.addEventListener('load', () => { if (editMode && canEdit) applyEditable(); });
+
+    function hasDirectText(el){
+      for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) return true;
+      return false;
+    }
+    function applyEditable(){
+      const doc = vframe.contentDocument; if (!doc || !doc.body) return;
+      if (!doc.getElementById('hf-edit-style')){
+        const st = doc.createElement('style'); st.id = 'hf-edit-style';
+        st.textContent = '[data-hfedit]{outline:1px dashed rgba(145,0,56,.5);outline-offset:2px;cursor:text;border-radius:2px;}'
+          + '[data-hfedit]:hover{outline:1.5px dashed #910038;background:rgba(145,0,56,.05);}'
+          + '[data-hfedit]:focus{outline:2px solid #910038;background:rgba(145,0,56,.07);}';
+        doc.head.appendChild(st);
+      }
+      doc.body.querySelectorAll(TEXT_SEL).forEach(el => {
+        if (hasDirectText(el) && !el.closest('[data-hfedit]')){
+          el.setAttribute('contenteditable', 'true');
+          el.setAttribute('data-hfedit', '1');
+        }
+      });
+      markImages(doc);
+      doc.body.addEventListener('input', onEdit, true);
+      doc.body.addEventListener('keydown', enterAsBreak, true);
+      doc.body.addEventListener('click', onImgClick, true);
+      setHint('<b>Edit mode on</b> — click any text to retype, or click a photo to swap it. Changes auto-save here; use <b>HTML</b> or <b>PNG</b> to export.');
+    }
+    function markImages(doc){
+      // real <img> photos (skip tiny logos/social icons)
+      doc.querySelectorAll('img').forEach(img => {
+        const w = img.clientWidth || parseInt(img.getAttribute('width')) || 0;
+        if (w >= 70){ img.setAttribute('data-hfimg', 'img'); img.setAttribute('title', 'Click to change this photo'); }
+      });
+      // background-image heroes — add a floating "change photo" button
+      doc.querySelectorAll('[style*="background-image"]').forEach(el => {
+        if (el.hasAttribute('data-hfbg')) return;
+        el.setAttribute('data-hfbg', '1');
+        const btn = doc.createElement('div');
+        btn.className = 'hf-photobtn'; btn.setAttribute('data-hfctl', '1'); btn.textContent = '📷 Change photo';
+        el.appendChild(btn);
+      });
+    }
+    }
+    function disableEditable(){
+      const doc = vframe.contentDocument; if (!doc || !doc.body) return;
+      doc.body.querySelectorAll('[data-hfedit]').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('data-hfedit'); });
+      doc.body.removeEventListener('input', onEdit, true);
+      doc.body.removeEventListener('keydown', enterAsBreak, true);
+    }
+    function enterAsBreak(e){ if (e.key === 'Enter'){ e.preventDefault(); vframe.contentDocument.execCommand('insertLineBreak'); } }
+
+    let saveTimer;
+    function onEdit(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveEdits, 350); }
+    function getCleanHTML(){
+      const doc = vframe.contentDocument;
+      const clone = doc.documentElement.cloneNode(true);
+      clone.querySelectorAll('[data-hfedit]').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('data-hfedit'); });
+      const st = clone.querySelector('#hf-edit-style'); if (st) st.remove();
+      const bs = clone.querySelector('#hf-base'); if (bs) bs.remove();
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+    function saveEdits(){
+      if (!canEdit || !curFile) return;
+      localStorage.setItem(sKey(curFile), getCleanHTML());
+      setHint('<b>Saved ✓</b> — your copy edits are stored in this browser.');
+    }
+    function updateToolbar(){
+      const edited = canEdit && curFile && localStorage.getItem(sKey(curFile)) != null;
+      editBtn.classList.toggle('on', editMode);
+      resetBtn.style.display = edited ? '' : 'none';
+      editBtn.style.opacity = canEdit ? '1' : '.5';
+    }
+    function toggleEdit(){
+      if (!canEdit){ setHint('Editing needs a local server — see the note above.', true); return; }
+      editMode = !editMode;
+      if (editMode) applyEditable();
+      else { saveEdits(); disableEditable(); }
+      updateToolbar();
+    }
+    function downloadTemplate(){
+      const html = canEdit ? getCleanHTML() : null;
+      if (!html){ setHint('Download needs a local server — see the note above.', true); return; }
+      const name = curFile.split('/').pop();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    function resetTemplate(){
+      if (!canEdit) return;
+      if (!confirm('Discard your edits to this template and restore the original copy?')) return;
+      localStorage.removeItem(sKey(curFile));
+      vframe.srcdoc = injectBase(origCache[curFile], curFile);   // load fires -> reapplies editable if on
+      updateToolbar();
+      setHint('Original copy restored.');
+    }
+    function saveCurrent(){ if (editMode && canEdit) saveEdits(); }
+
+    function open(i){ cur = i; viewer.classList.add('open'); document.body.style.overflow = 'hidden'; render(); }
+    function close(){ saveCurrent(); viewer.classList.remove('open'); document.body.style.overflow = ''; vframe.removeAttribute('srcdoc'); vframe.src = 'about:blank'; setHint(''); }
+    function go(i){ saveCurrent(); cur = (i + view.length) % view.length; render(); }
+
+    editBtn.onclick  = toggleEdit;
+    dlBtn.onclick    = downloadTemplate;
+    resetBtn.onclick = resetTemplate;
 
     document.getElementById('closeBtn').onclick = close;
     document.getElementById('prevBtn').onclick = ()=>go(cur-1);
