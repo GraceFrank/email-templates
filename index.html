@@ -133,6 +133,7 @@
 
   <script>
     const CATS = [
+      {key:"ready",      label:"Ready for Use"},
       {key:"welcome",    label:"Welcome"},
       {key:"organizers", label:"Organizers"},
       {key:"contact",    label:"Contact / Thank You"},
@@ -140,6 +141,11 @@
     ];
 
     const TEMPLATES = [
+      // ---- Ready for Use (production builds, hosted assets) ----
+      {cat:"ready", name:"Organizer Onboarding", tag:"Live / Hosted", file:"build/HOFWAMS-Organizer-Onboarding.html"},
+      {cat:"ready", name:"Outreach / Demo",      tag:"Live / Hosted", file:"build/HOFWAMS-Organizer-Outreach.html"},
+      {cat:"ready", name:"The Organizer Brief",  tag:"Live / Hosted", file:"build/HOFWAMS-Newsletter-Weekly.html"},
+      {cat:"ready", name:"Registration Confirm", tag:"Live / Hosted", file:"build/HOFWAMS-Contact-Minimal.html"},
       // ---- Welcome ----
       {cat:"welcome", name:"A · The Drop",     tag:"Photo Hero", file:"emails/hofwams-welcome-concert.html"},
       {cat:"welcome", name:"B · Warm Welcome", tag:"Light / Benefits", file:"emails/hofwams-welcome-warm.html"},
